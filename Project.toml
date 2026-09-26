@@ -1,0 +1,18 @@
+name = "GraphTrafficPaper"
+uuid = "e623e094-bd37-470e-879b-a3c9ec975740"
+version = "0.1.0"
+
+[deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+
+[compat]
+CSV = "0.10"
+CairoMakie = "0.15"
+DataFrames = "1"
+Graphs = "1"
+HDF5 = "0.17"
+julia = "1.12"
