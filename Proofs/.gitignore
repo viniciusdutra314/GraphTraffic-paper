@@ -1,0 +1,6 @@
+/.lake/
+/.elan/
+/.direnv/
+/result
+!/lake-manifest.json
+/.cache/
