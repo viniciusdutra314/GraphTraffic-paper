@@ -74,7 +74,7 @@ function analysis(::Type{BarabasiLimitedRouting},
         end
         traveling_time = result.average_traveling_time
         is_adaptive = any(modifier -> modifier["type"] == "ModifierEdgeCapacity",
-                       get(GraphTraffic.metadata(result), "modifiers", []))
+                       get(GraphTraffic.original_json_config(result), "modifiers", []))
         push!(rows, (; simulation_id=string(result.id), visibility=visibility_radius,
                      capacity_strategy=is_adaptive ? "adaptive" : "fixed",
                      travel_time_ratio=traveling_time / expected,

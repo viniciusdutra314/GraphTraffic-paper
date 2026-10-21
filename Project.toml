@@ -8,7 +8,9 @@ CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 GraphTraffic = "1b8d8c43-06e4-49e1-a63e-bcea520cf9c8"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [sources]
 GraphTraffic = {path = "GraphTraffic-jl"}
@@ -19,7 +21,9 @@ CairoMakie = "0.15"
 DataFrames = "1"
 GraphTraffic = "0.1"
 Graphs = "1"
+JSON = "1.11.0"
 Revise = "3.17.1"
+StatsBase = "0.34.13"
 julia = "1.12"
 
 [extras]
