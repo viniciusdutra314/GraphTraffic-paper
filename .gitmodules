@@ -1,3 +1,6 @@
 [submodule "GraphTraffic-jl"]
 	path = GraphTraffic-jl
 	url = https://github.com/viniciusdutra314/GraphTraffic-jl
+[submodule "GraphTraffic-rs"]
+	path = GraphTraffic-rs
+	url = https://github.com/viniciusdutra314/GraphTraffic-rs
