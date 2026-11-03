@@ -31,9 +31,8 @@ function simulation(::Type{RhoVsEta};
     free_flow_sampling_time=200
     routing=RandomWalk()
     configs=[SimulationConfig(; graph, routing, message_rate, iterations, warmup,
-        initial_capacity=uniform_initial_capacity(graph, 1), modifiers=[
-        ModifierEdgeCapacity(; free_flow_rate, free_flow_sampling_time)
-    ],
+        initial_capacity=uniform_initial_capacity(graph, 1),
+        modifier=ModifierEdgeCapacity(; free_flow_rate, free_flow_sampling_time),
         metadata=JSON.Object{String,Any}(
             "graph_name" => graph_name,
             "eta" => free_flow_rate,

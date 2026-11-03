@@ -43,9 +43,9 @@ function simulation(::Type{BarabasiLimitedRouting};
                                 message_rate=params.message_rate,
                                 iterations=params.iterations, warmup=params.warmup,
                                 seed=params.seed,
-                                modifiers=[capacity_modifier], observers=[capacity_observer])
+                                modifier=capacity_modifier, observers=[capacity_observer])
                for visibility_radius in visibilities_to_simulate(graph)]
-    adaptive_results = call_graphtraffic_rs(adaptive_configs; output, threads=num_threads, overwrite)
+    adaptive_results = call_graphtraffic_rs(adaptive_configs; output, num_threads, overwrite)
 
     fixed_configs = [SimulationConfig(; graph=config.graph,
                       initial_capacity=balanced_initial_capacity(
@@ -55,7 +55,7 @@ function simulation(::Type{BarabasiLimitedRouting};
                       iterations=config.iterations, warmup=config.warmup, seed=config.seed,
                       observers=config.observers)
      for config in adaptive_configs]
-    call_graphtraffic_rs(fixed_configs; output, threads=num_threads, append=true)
+    call_graphtraffic_rs(fixed_configs; output, num_threads, append=true)
     nothing
 end
 
@@ -73,8 +73,8 @@ function analysis(::Type{BarabasiLimitedRouting},
             average_expected_limited_visibility_route_length(graph; visibility_radius, num_threads)
         end
         traveling_time = result.average_traveling_time
-        is_adaptive = any(modifier -> modifier["type"] == "ModifierEdgeCapacity",
-                       get(GraphTraffic.original_json_config(result), "modifiers", []))
+        modifier = get(GraphTraffic.original_json_config(result), "modifier", nothing)
+        is_adaptive = !isnothing(modifier) && modifier["type"] == "ModifierEdgeCapacity"
         push!(rows, (; simulation_id=string(result.id), visibility=visibility_radius,
                      capacity_strategy=is_adaptive ? "adaptive" : "fixed",
                      travel_time_ratio=traveling_time / expected,
