@@ -16,6 +16,7 @@
           pkgs = nixpkgs.legacyPackages.${system};
         in {
           default = pkgs.mkShell {
+            packages = [ pkgs.texliveFull ];
             inputsFrom = [
               graphtraffic-jl.devShells.${system}.default
               graphtraffic-rs.devShells.${system}.default

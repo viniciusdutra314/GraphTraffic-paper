@@ -1,0 +1,130 @@
+\documentclass[a4paper]{article}
+
+\usepackage{amsmath}
+\usepackage{graphicx} 
+\usepackage{float}
+\usepackage{caption}
+
+\begin{document}
+What?
+
+\section{Edge capacity update heuristic}
+eafaefeafea
+We assume that the network operates in a non-critical regime,
+where the message generation rate is sufficiently low to
+allow the system to reach a statistical steady state.
+At equilibrium, each edge $e \in E$ is associated with
+a random variable $X_e$ representing its queue length,
+whose cumulative distribution function (CDF) is denoted
+by $F_e$.
+
+The free-flow rate (FFR) of an edge is defined as the
+proportion of time during which its queue length does
+not exceed its capacity. Formally,
+
+\begin{equation}
+    \mathrm{FFR}_e
+    = \mathbb{P}(X_e \leq C_e)
+    = F_e(C_e),
+\end{equation}
+
+\noindent
+where $C_e$ denotes the capacity of edge $e$.
+
+Given a desired minimum free-flow rate $\eta$, our
+objective is to find a capacity configuration that
+minimizes the total network capacity while ensuring
+that every edge satisfies the prescribed FFR constraint.
+This leads to the following optimization problem:
+
+\begin{equation}
+    \label{eq:optimization_problem}
+    \begin{aligned}
+        \underset{\mathbf{C} \in \mathbb{N}_+^{E}}
+        {\text{minimize}}
+        \quad & \sum_{e \in E} C_e \\
+        \text{subject to}
+        \quad & F_e(C_e; \mathbf{C}) \geq \eta,
+        \quad \forall e \in E.
+    \end{aligned}
+\end{equation}
+
+\noindent
+Here, $\mathbf{C} = (C_e)_{e \in E}$ denotes the
+network capacity configuration. The dependence of
+$F_e$ on $\mathbf{C}$ is made explicit because
+changes in edge capacities may affect traffic
+distributions throughout the network.
+
+To address this problem, we propose an iterative
+heuristic based on local traffic observations.
+
+Starting from an initial capacity configuration,
+the network is simulated until it reaches a statistical
+steady state. Queue lengths are then sampled over
+an interval $\Delta T$, and an empirical CDF
+$\widehat{F}_e$ is constructed for each edge.
+
+At iteration $k$, the minimum capacity required to
+satisfy the target FFR under the observed traffic
+distribution is estimated as
+
+\begin{equation}
+    \label{eq:minimum_capacity}
+    C_e^{*,(k)}
+    =
+    \min \left\{
+        C \in \mathbb{N}_+
+        \;\middle|\;
+        \widehat{F}_e^{(k)}(C) \geq \eta
+    \right\}.
+\end{equation}
+
+Rather than immediately assigning this value,
+we update each edge capacity using the geometric
+mean of its current capacity and the estimated
+minimum capacity:
+
+\begin{equation}
+    \label{eq:capacity_update}
+    C_e^{(k+1)}
+    =
+    \sqrt{
+        C_e^{(k)} C_e^{*,(k)}
+    }.
+\end{equation}
+
+The geometric mean introduces a smoothing effect,
+reducing abrupt changes in capacity that could
+otherwise lead to oscillations between successive
+updates. It is particularly suitable for our setting,
+where traffic volumes may vary by orders of magnitude
+across different edges. Unlike the arithmetic mean,
+the geometric mean provides an intermediate value
+that accounts for relative rather than absolute
+differences between capacities.
+
+Since modifying the capacity of an edge may affect
+traffic distributions throughout the network,
+the estimated minimum capacities may change after
+each update. We therefore repeat the procedure
+over successive sampling intervals, allowing the
+system to stabilize and the traffic distributions
+to be re-estimated.
+
+Although this procedure does not guarantee global
+optimality, our numerical experiments indicate
+convergence toward stable capacity configurations
+that satisfy the prescribed FFR constraint while
+maintaining a relatively low total network capacity.
+
+An important advantage of the proposed heuristic
+is its local nature: each edge updates its capacity
+using only its own observed traffic distribution,
+without requiring information about the traffic
+conditions of other edges. This property makes
+the method particularly attractive for large-scale
+networks.
+
+
+\end{document}
