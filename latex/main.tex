@@ -15,6 +15,95 @@
 
 \section{Methods}
 
+\subsection{Traffic Model}
+\label{sec:traffic_model}
+
+We consider a simple model of packet traffic on
+networks~\cite{chenTrafficDynamicsComplex2012}. The system consists
+of a graph and rules for packet generation and routing.
+
+Let $G=(V,E)$ be a connected, undirected graph. Vertices represent
+routers or hosts, and edges represent communication links. Time
+advances in discrete steps. At each step, every vertex
+$s \in V$ independently generates one
+packet with probability $\rho$. Its destination $t$ is chosen uniformly
+from $V \setminus \{s\}$.
+
+All vertices participate in routing. Each edge $e$ has a positive
+integer capacity $C_e$, the maximum number of packets it can transmit
+per time step. Packets waiting to cross an edge are stored in a
+first-in, first-out (FIFO) queue. Each undirected edge has a single
+queue and shares its capacity between both directions. Packets advance
+by at most one edge per time step and leave the system upon reaching
+their destination.
+
+We consider three routing strategies: shortest path, random walk, and
+limited visibility. In shortest-path routing, let $\mathcal{W}_{st}$
+be the set of shortest paths from $s$ to $t$. Each packet follows a
+path chosen uniformly from $\mathcal{W}_{st}$. We use the sampling
+approach described in~\cite{dreyerOptimalUniformShortest2025}
+to avoid explicitly enumerating and storing all shortest paths.
+
+In random-walk routing, the packet starts at $P_0=s$ and chooses
+its next vertex $P_{i+1}$ uniformly from $N_G(P_i)$, the neighbors
+of its current vertex. The walk ends when $P_i=t$.
+
+In limited-visibility routing, let $r$ be the visibility radius and
+$d(v,t)$ the shortest-path distance from the packet's current vertex
+$v$ to its destination. If $d(v,t) \leq r$, the packet uses
+shortest-path routing. Otherwise, it takes a random-walk step.
+
+For a fixed graph, routing strategy, and capacity configuration, the
+critical generation rate $\rho_c$ separates two traffic regimes
+\cite{chenTrafficDynamicsComplex2012}. When $\rho < \rho_c$, after an initial transient, it
+reaches a statistical steady state in which the total number of
+packets fluctuates around a constant mean. When $\rho > \rho_c$,
+the system is congested: packets are generated faster than the
+network can deliver them. The total number of queued packets, along
+with packet waiting times and delays, grows without bound.
+
+\subsection{Mean Routing Time under Limited Visibility}
+\label{sec:limited_visibility_time}
+
+We calculate the expected number of hops under limited visibility
+using an absorbing Markov chain. This corresponds to the mean travel
+time without queueing delays, with one time step per hop.
+
+For each destination $t$, let $B_t(r)=\{v \in V : d(v,t) \leq r\}$
+be its visible region. To calculate the time until the packet enters
+$B_t(r)$, we represent the random walk as an absorbing Markov chain.
+The vertices outside $B_t(r)$ are its transient states, while the
+entire region $B_t(r)$ is collapsed into a single absorbing state.
+Within the visible region, the packet uses shortest-path routing, so
+its remaining travel time is deterministic and equal to its distance
+from the destination. The problem therefore reduces to calculating
+the expected hitting time of the absorbing state and adding the
+known shortest-path travel time.
+
+From each transient vertex $v$, the packet moves to each neighbor
+with probability $1/\deg(v)$. We denote by $Q_t$ the submatrix of the
+chain's transition matrix containing only transitions between
+transient states. The vector $\mathbf{h}_t$ of expected times
+to absorption, or equivalently to first entry into $B_t(r)$, is
+obtained by solving
+\begin{equation}
+    (I-Q_t)\mathbf{h}_t=\mathbf{1}.
+\end{equation}
+
+A packet starting outside $B_t(r)$ first enters it at distance $r$
+from $t$, after which it needs exactly $r$ shortest-path hops. Thus,
+the expected route length from $s$ to $t$ is
+\begin{equation}
+    \ell_{st}=
+    \begin{cases}
+        d(s,t), & d(s,t) \leq r, \\
+        h_t(s)+r, & d(s,t)>r,
+    \end{cases}
+\end{equation}
+where $h_t(s)$ is the entry of $\mathbf{h}_t$ corresponding to source
+$s$. We repeat this calculation for every destination and average
+$\ell_{st}$ over all $|V|(|V|-1)$ ordered pairs with $s \ne t$.
+
 \subsection{Ensuring Network Connectivity}
 
 Graph connectivity is necessary for this study, as it ensures that a
