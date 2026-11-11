@@ -8,17 +8,46 @@
 
 
 \begin{document}
-What?
+\section{Abstract}
 
-\section{Edge capacity update heuristic}
-eafaefeafea
+
+\section{Introduction}
+
+\section{Methods}
+
+\subsection{Ensuring Network Connectivity}
+
+Graph connectivity is necessary for this study, as it ensures that a
+message originating at any node $s$ can reach any destination $t$.
+We propose a simple heuristic to ensure connectivity.
+The procedure repeatedly merges connected components, preserving the
+vertex set and preferring degree-preserving edge swaps to limit the
+addition of new edges.
+
+For each edge swap, the procedure randomly selects a component $C_a$
+containing a cycle and another component $C_b$ containing at least one
+edge, giving preference to trees. A non-bridge edge $(u,v)$ from $C_a$
+and any edge $(x,y)$ from $C_b$ are selected at random and replaced
+with $(u,x)$ and $(v,y)$.
+
+Since $C_a$ remains connected after its non-bridge edge is removed,
+both endpoints of the removed edge in $C_b$ reconnect through $C_a$, even if that
+edge was a bridge. The swap therefore merges the two components
+while preserving every vertex degree and the total number of edges.
+
+When no swap is possible, the procedure randomly selects two distinct
+components and one vertex from each, then inserts an edge between them. This
+increases the degree of each endpoint by one. Each swap or insertion
+reduces the number of components by one, and the procedure continues
+until the graph is connected.
+
+\subsection{Edge capacity update heuristic}
 We assume that the network operates in a non-critical regime,
 where the message generation rate is sufficiently low to
 allow the system to reach a statistical steady state.
 At equilibrium, each edge $e \in E$ is associated with
-a random variable $X_e$ representing its queue length,
-whose cumulative distribution function (CDF) is denoted
-by $F_e$.
+a random variable $X_e$ representing its queue length.
+We denote the cumulative distribution function of $X_e$ by $F_e$.
 
 The free-flow rate (FFR) of an edge is defined as the
 proportion of time during which its queue length does
@@ -46,89 +75,85 @@ This leads to the following optimization problem:
         {\text{minimize}}
         \quad & \sum_{e \in E} C_e \\
         \text{subject to}
-        \quad & F_e(C_e; \mathbf{C}) \geq \eta,
+        \quad & F_e(C_e) \geq \eta,
         \quad \forall e \in E.
     \end{aligned}
 \end{equation}
 
 \noindent
 Here, $\mathbf{C} = (C_e)_{e \in E}$ denotes the
-network capacity configuration. The dependence of
-$F_e$ on $\mathbf{C}$ is made explicit because
-changes in edge capacities may affect traffic
-distributions throughout the network.
+network capacity configuration.
 
 To address this problem, we propose an iterative
-heuristic based on local traffic observations.
+heuristic based on local traffic observations. For each edge, we use
+the observed queue lengths to estimate $F_e$ and select the smallest
+positive capacity for which the estimated free-flow rate reaches
+the target $\eta$. To reduce fluctuations between iterations, we
+retain memory of previous observations when estimating $F_e$ and
+adjust the capacity gradually toward the selected value.
 
-Starting from an initial capacity configuration,
-the network is simulated until it reaches a statistical
-steady state. Queue lengths are then sampled over
-an interval $\Delta T$, and an empirical CDF
-$\widehat{F}_e$ is constructed for each edge.
+Starting from an initial capacity configuration, we record the
+queue length of each edge at every simulation step. The capacity
+update method is applied every $\Delta T$ steps, with $k$ denoting its
+iteration number. We denote by $\widehat{p}_e^{(k)}(q)$ the fraction of
+observations in the current interval for which edge $e$ has queue
+length $q$. This defines the empirical queue-length distribution.
 
-At iteration $k$, the minimum capacity required to
-satisfy the target FFR under the observed traffic
-distribution is estimated as
+To retain information from earlier intervals, we combine the current
+histogram with the previous estimate. We denote this distribution
+with memory by $\overline{p}_e^{(k)}$, which we update as follows:
+\begin{equation}
+    \overline{p}_e^{(k)}(q)
+    = (1-\alpha)\widehat{p}_e^{(k)}(q) + \alpha \overline{p}_e^{(k-1)}(q) ,
+\end{equation}
+where $\alpha \in [0,1)$ is the momentum parameter. At the first
+iteration, we initialize $\overline{p}_e^{(1)} = \widehat{p}_e^{(1)}$.
 
+We estimate capacity from the distribution with memory
+$\overline{p}_e^{(k)}$, rather than directly from the current empirical
+distribution $\widehat{p}_e^{(k)}$. For $\alpha>0$, this incorporates
+observations from previous iterations and reduces the influence of
+fluctuations within a single sampling interval on the capacity estimate.
+The cumulative distribution used for this estimate is therefore
+\begin{equation}
+    \widehat{F}_e^{(k)}(q) = \sum_{j=0}^{q} \overline{p}_e^{(k)}(j).
+\end{equation}
+We denote by $\widehat{C}_e^{(k)}$ the estimated capacity needed to satisfy
+the target $\eta$ at iteration $k$. It is the smallest positive integer
+capacity at which the estimated cumulative probability reaches $\eta$:
 \begin{equation}
     \label{eq:minimum_capacity}
-    C_e^{*,(k)}
-    =
-    \min \left\{
-        C \in \mathbb{N}_+
-        \;\middle|\;
-        \widehat{F}_e^{(k)}(C) \geq \eta
-    \right\}.
+    \widehat{C}_e^{(k)} = \max\left(1,
+        \min\left\{q \in \mathbb{N}_0 \;\middle|\;
+        \widehat{F}_e^{(k)}(q) \geq \eta\right\}\right).
 \end{equation}
 
-Rather than immediately assigning this value,
-we update each edge capacity using the geometric
-mean of its current capacity and the estimated
-minimum capacity:
-
+The capacity is then updated using the geometric mean of its current
+value and $\widehat{C}_e^{(k)}$. Since capacities are integers, we round this
+mean upward to an integer:
 \begin{equation}
     \label{eq:capacity_update}
     C_e^{(k+1)}
-    =
-    \sqrt{
-        C_e^{(k)} C_e^{*,(k)}
-    }.
+    = \Bigl\lceil \bigl(C_e^{(k)} \widehat{C}_e^{(k)}\bigr)^{1/2} \Bigr\rceil.
 \end{equation}
+This makes the update more gradual than directly assigning the
+estimated capacity. The observations from the current interval are
+then cleared, while $\overline{p}_e^{(k)}$ is retained for the next update.
 
-The geometric mean introduces a smoothing effect,
-reducing abrupt changes in capacity that could
-otherwise lead to oscillations between successive
-updates. It is particularly suitable for our setting,
-where traffic volumes may vary by orders of magnitude
-across different edges. Unlike the arithmetic mean,
-the geometric mean provides an intermediate value
-that accounts for relative rather than absolute
-differences between capacities.
+The method has no automatic stopping mechanism. The number of updates
+is specified in advance. In our simulations, we assessed whether this
+number was sufficient by checking
+that the mean edge capacity had stabilized and that the free-flow rate
+target $\eta$ was satisfied for every edge. This method is a heuristic:
+we have not proved convergence or global optimality. Nevertheless, we
+obtained good results with this heuristic in our simulations.
 
-Since modifying the capacity of an edge may affect
-traffic distributions throughout the network,
-the estimated minimum capacities may change after
-each update. We therefore repeat the procedure
-over successive sampling intervals, allowing the
-system to stabilize and the traffic distributions
-to be re-estimated.
+\section{Results}
 
-Although this procedure does not guarantee global
-optimality, our numerical experiments indicate
-convergence toward stable capacity configurations
-that satisfy the prescribed FFR constraint while
-maintaining a relatively low total network capacity.
+\section{Discussion}
 
-An important advantage of the proposed heuristic
-is its local nature: each edge updates its capacity
-using only its own observed traffic distribution,
-without requiring information about the traffic
-conditions of other edges. This property makes
-the method particularly attractive for large-scale
-networks.
-
+\section{Conclusions}
 
 \bibliographystyle{plain}
-\bibliography{latex/references}
+\bibliography{references}
 \end{document}
